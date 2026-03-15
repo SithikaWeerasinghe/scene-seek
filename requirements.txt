@@ -1,0 +1,8 @@
+# SceneSeek Project Dependencies
+# This is a minimal placeholder for the prototype requirements.
+
+numpy
+opencv-python
+pillow
+scikit-learn
+tqdm
