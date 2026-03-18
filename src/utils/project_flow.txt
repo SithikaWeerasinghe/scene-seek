@@ -1,0 +1,7 @@
+SceneSeek project flow
+
+1. Input a short movie clip
+2. Extract frames from the clip
+3. Convert frames into visual features
+4. Compare features with saved movie references
+5. Predict the closest matching movie
