@@ -1,0 +1,7 @@
+SceneSeek preprocessing plan
+
+1. Read the input video clip
+2. Sample a few frames from the clip instead of using every frame
+3. Keep frames that are visually clear
+4. Avoid frames that are dark, blurry, or transition-heavy
+5. Use the selected frames for feature extraction
