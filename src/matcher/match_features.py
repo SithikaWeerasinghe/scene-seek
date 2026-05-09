@@ -1,21 +1,8 @@
 import numpy as np
 import os
 
-# Define the path to our input features
-# Assuming the script runs from the project root
-INPUT_FEATURES_PATH = "outputs/features/features.npy"
-
-# We'll use this list of movies for our simulated database
-MOVIES = [
-    "Avatar",
-    "Interstellar",
-    "Titanic",
-    "Inception",
-    "Harry Potter"
-]
-
 def load_input_features(filepath):
-    """Loads the extracted features from the numpy file."""
+    """Loads the extracted features from the input video numpy file."""
     # Check if the file exists before trying to load it
     if not os.path.exists(filepath):
         print(f"Error: Feature file not found at '{filepath}'")
@@ -27,34 +14,36 @@ def load_input_features(filepath):
     print(f"Loaded input features with shape: {features.shape}")
     return features
 
-def create_mock_database(feature_dim):
+def load_reference_database(reference_dir):
     """
-    Creates a simulated database of movie features.
-    In a real app, these would be pre-calculated from full movies and loaded from a database.
-    Here, we just generate random features of the same dimension for demonstration.
+    Loads the real reference database of movie features.
+    Reads each movie's feature vector from its folder.
     """
-    print("\n--- Creating Mock Database ---")
-    mock_db = {}
+    print("\n--- Loading Reference Database ---")
     
-    # We set a fixed random seed so the "random" database is the same every time you run it,
-    # which makes testing easier and more consistent for beginners.
-    np.random.seed(42) 
-    
-    for movie in MOVIES:
-        # Generate a random feature vector of the correct size
-        random_features = np.random.rand(feature_dim)
+    if not os.path.exists(reference_dir):
+        print(f"Error: Reference database directory not found at '{reference_dir}'")
+        print("Please run the build_reference_database.py script first.")
+        return None
         
-        # Normalize the random features (important for cosine similarity)
-        norm = np.linalg.norm(random_features)
-        if norm > 0:
-            normalized_features = random_features / norm
+    reference_db = {}
+    
+    # Get all subdirectories (each represents a movie)
+    movie_folders = [f.path for f in os.scandir(reference_dir) if f.is_dir()]
+    
+    for movie_folder in movie_folders:
+        movie_name = os.path.basename(movie_folder)
+        feature_file = os.path.join(movie_folder, "features.npy")
+        
+        if os.path.exists(feature_file):
+            # Load the pre-calculated feature vector for this movie
+            movie_vector = np.load(feature_file)
+            reference_db[movie_name] = movie_vector
         else:
-            normalized_features = random_features
+            print(f"  Warning: No features.npy found for movie '{movie_name}'")
             
-        mock_db[movie] = normalized_features
-        
-    print(f"Created mock database with {len(MOVIES)} movies.")
-    return mock_db
+    print(f"Loaded {len(reference_db)} movies from the reference database.")
+    return reference_db
 
 def calculate_cosine_similarity(vec1, vec2):
     """
@@ -77,12 +66,12 @@ def calculate_cosine_similarity(vec1, vec2):
         
     return dot_product / (norm_v1 * norm_v2)
 
-def match_features():
+def match_features(input_features_path, reference_db_dir):
     """Main function to perform feature matching."""
     print("=== SceneSeek: Feature Matching Prototype ===\n")
 
     # 1. Load the features extracted from the input video
-    input_features = load_input_features(INPUT_FEATURES_PATH)
+    input_features = load_input_features(input_features_path)
     if input_features is None:
         return
 
@@ -92,19 +81,19 @@ def match_features():
     print("\nAveraging frame features to create a clip-level signature...")
     clip_feature = np.mean(input_features, axis=0)
     
-    # Get the dimension of the feature vector (e.g., 2048 for ResNet50)
-    feature_dim = clip_feature.shape[0]
     print(f"Averaged clip feature shape: {clip_feature.shape}")
 
-    # 3. Create a simulated database of movie features to match against
-    mock_db = create_mock_database(feature_dim)
+    # 3. Load the real database of movie features to match against
+    reference_db = load_reference_database(reference_db_dir)
+    if not reference_db:
+        return
 
     # 4. Compare input clip features against each movie in the database
     print("\n--- Matching Results ---")
     best_match = None
     highest_similarity = -1.0
 
-    for movie, db_feature in mock_db.items():
+    for movie, db_feature in reference_db.items():
         # Calculate cosine similarity between our input clip and the database movie
         similarity_score = calculate_cosine_similarity(clip_feature, db_feature)
         
@@ -117,8 +106,21 @@ def match_features():
 
     # 5. Output the final prediction
     print("\n=============================================")
-    print(f"🌟 BEST MATCH: {best_match} (Score: {highest_similarity:.4f}) 🌟")
+    if best_match:
+        print(f"🌟 BEST MATCH: {best_match} (Score: {highest_similarity:.4f}) 🌟")
+    else:
+        print("No matches found. Is the reference database empty?")
     print("=============================================")
 
 if __name__ == "__main__":
-    match_features()
+    # --- Configuration ---
+    
+    # Get the root directory of the project
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    
+    # Define paths based on the project root
+    input_features_path = os.path.join(base_dir, "outputs", "features", "features.npy")
+    reference_db_dir = os.path.join(base_dir, "outputs", "reference_features")
+    
+    # Run the matcher
+    match_features(input_features_path, reference_db_dir)
