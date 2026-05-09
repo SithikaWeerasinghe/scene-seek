@@ -1,0 +1,7 @@
+SceneSeek feature extraction plan
+
+1. Take selected frames from preprocessing
+2. Convert each frame into visual features
+3. Represent each frame as a numeric vector
+4. Store the features for comparison
+5. Use the features to match the input clip with movie references
