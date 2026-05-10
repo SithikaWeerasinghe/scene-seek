@@ -53,17 +53,19 @@ def run_pipeline(test_video_path):
     # --- Step 3: Match Features ---
     print("\n[STEP 3/3] Matching clip against the Reference Database...")
     # This function reads our new features.npy and compares it to all movies in reference_db_dir
-    match_features(features_path, reference_db_dir)
+    best_match = match_features(features_path, reference_db_dir)
     
     print("\n✨ PIPELINE COMPLETE ✨")
     print("="*50 + "\n")
+    
+    return best_match
 
 if __name__ == "__main__":
     # --- Configuration ---
     
     # Define the path to a test video you want to identify.
     # Feel free to change "test_clip.mp4" to whatever your file is named!
-    test_video = os.path.join(BASE_DIR, "data", "test", "test_clip.mp4")
+    test_video = os.path.join(BASE_DIR, "data", "test", "test_avatar_1.mp4")
     
     # Run the entire pipeline with a single function call
     run_pipeline(test_video)

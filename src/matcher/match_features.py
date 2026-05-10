@@ -111,6 +111,8 @@ def match_features(input_features_path, reference_db_dir):
     else:
         print("No matches found. Is the reference database empty?")
     print("=============================================")
+    
+    return best_match
 
 if __name__ == "__main__":
     # --- Configuration ---
